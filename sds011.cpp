@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <poll.h>
+#include <string.h>
 
 // static void Hexdump(const void* const buffer, const unsigned size)
 // {
@@ -21,8 +22,11 @@ namespace SDS011
 	{
 		// set terminal options
 		struct termios tios;
-		cfmakeraw(&tios);
-		if(cfsetspeed(&tios, 9600) != 0) throw "cfsetspeed() failed";
+		memset(&tios, 0, sizeof(tios));
+		tios.c_iflag = IGNBRK;
+		tios.c_oflag = 0;
+		tios.c_cflag = CREAD | CLOCAL | B9600 | CS8;
+		tios.c_lflag = 0;
 		if(tcsetattr(this->fd, TCSANOW, &tios) != 0) throw "tcsetattr() failed";
 
 		// read all data there is
@@ -34,7 +38,7 @@ namespace SDS011
 	{
 		pollfd pfd;
 		pfd.fd = this->fd;
-		pfd.events = POLLIN;
+		pfd.events = POLLIN|POLLPRI;
 		pfd.revents = 0;
 		SYSERR(poll(&pfd, 1, timeout));
 		if(pfd.revents != POLLIN)
@@ -42,6 +46,7 @@ namespace SDS011
 			this->status = "timeout waiting for data from sensor";
 			return false;
 		}
+		usleep(10000);	// poll triggers once the first byte has been received, but we need the complete record not just the first byte. In theory the transfer of the remaining 9bytes takes 9.375ms at 9600baud (mind the start- and stop-bits!), but we wait for 10ms to be sure
 
 		uint8_t buffer[20];
 		const long n = SYSERR(read(fd, buffer, sizeof(buffer)));
@@ -68,8 +73,8 @@ namespace SDS011
 		}
 		else
 		{
-			this->status = "synchronisation error";
 			this->Sync();
+			this->status = "synchronisation error";
 			return false;
 		}
 	}
