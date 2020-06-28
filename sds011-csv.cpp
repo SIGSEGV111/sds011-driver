@@ -1,9 +1,23 @@
 #include "sds011.hpp"
 #include <sys/time.h>
+#include <signal.h>
+#include <unistd.h>
+
+static volatile bool do_run = true;
+
+static void OnSignal(int)
+{
+	do_run = false;
+}
 
 int main(int argc, char* argv[])
 {
 	using namespace SDS011;
+
+	signal(SIGINT,  &OnSignal);
+	signal(SIGTERM, &OnSignal);
+	signal(SIGHUP,  &OnSignal);
+	signal(SIGQUIT, &OnSignal);
 
 	if(argc != 2)
 	{
@@ -14,10 +28,18 @@ int main(int argc, char* argv[])
 	try
 	{
 		TSDS011 sensor(argv[1]);
-		for(;;)
+
+		// take a sample every 10min, sensor will be powered down for most of the time in between
+		sensor.SetSampleInterval(10);
+
+		while(do_run)
 		{
-			if(sensor.Refresh(-1))
+			try
 			{
+				// take one sample
+				sensor.Refresh();
+
+				// get timestamp
 				timeval tv_start;
 				SYSERR(gettimeofday(&tv_start, NULL));
 				const unsigned long long ns = tv_start.tv_sec * 1000000000ULL + tv_start.tv_usec * 1000ULL;
@@ -25,10 +47,9 @@ int main(int argc, char* argv[])
 				// write in CSV compatible format to stdout
 				printf("%f;%f;%llu\n", sensor.PM25(), sensor.PM10(), ns);
 			}
-			else
+			catch(const char* const msg)
 			{
-				// huh? better check status...
-				fprintf(stderr, "[WARN] received invalid data: %s\n", sensor.Status());
+				fprintf(stderr, "[WARN] %s\n", msg);
 			}
 		}
 	}

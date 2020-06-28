@@ -16,8 +16,10 @@ int main(int argc, char* argv[])
 		TSDS011 sensor(argv[1]);
 		for(;;)
 		{
-			if(sensor.Refresh(-1))
+			try
 			{
+				sensor.Refresh(-1);
+
 				timeval tv_start;
 				SYSERR(gettimeofday(&tv_start, NULL));
 				const unsigned long long ns = tv_start.tv_sec * 1000000000ULL + tv_start.tv_usec * 1000ULL;
@@ -28,10 +30,9 @@ int main(int argc, char* argv[])
 				// flush output to prevent caching
 				fflush(stdout);
 			}
-			else
+			catch(const char* const msg)
 			{
-				// huh? better check status...
-				fprintf(stderr, "[WARN] received invalid data: %s\n", sensor.Status());
+				fprintf(stderr, "[WARN] %s\n", msg);
 			}
 		}
 	}
