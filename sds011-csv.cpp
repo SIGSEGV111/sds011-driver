@@ -1,6 +1,7 @@
 #include "sds011.hpp"
 #include <sys/time.h>
 #include <signal.h>
+#include <sys/file.h>
 #include <unistd.h>
 
 static volatile bool do_run = true;
@@ -19,9 +20,9 @@ int main(int argc, char* argv[])
 	signal(SIGHUP,  &OnSignal);
 	signal(SIGQUIT, &OnSignal);
 
-	if(argc != 2)
+	if(argc != 3)
 	{
-		fprintf(stderr, "usage: %s <tty-device>\n", argv[0]);
+		fprintf(stderr, "usage: %s <tty-device> <location>\n", argv[0]);
 		return 1;
 	}
 
@@ -37,15 +38,17 @@ int main(int argc, char* argv[])
 			try
 			{
 				// take one sample
-				sensor.Refresh();
+				sensor.Refresh(11 * 60 * 1000);
 
 				// get timestamp
 				timeval tv_start;
 				SYSERR(gettimeofday(&tv_start, NULL));
-				const unsigned long long ns = tv_start.tv_sec * 1000000000ULL + tv_start.tv_usec * 1000ULL;
 
-				// write in CSV compatible format to stdout
-				printf("%f;%f;%llu\n", sensor.PM25(), sensor.PM10(), ns);
+				SYSERR(flock(STDOUT_FILENO, LOCK_EX));
+				printf("%ld.%06ld;%ld.%06ld;\"%s\";\"pm10\";%f\n", tv_start.tv_sec, tv_start.tv_usec, tv_start.tv_sec, tv_start.tv_usec, argv[2], sensor.PM10());
+				printf("%ld.%06ld;%ld.%06ld;\"%s\";\"pm25\";%f\n", tv_start.tv_sec, tv_start.tv_usec, tv_start.tv_sec, tv_start.tv_usec, argv[2], sensor.PM25());
+				fflush(stdout);
+				SYSERR(flock(STDOUT_FILENO, LOCK_UN));
 			}
 			catch(const char* const msg)
 			{
