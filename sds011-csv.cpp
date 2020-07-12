@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
 				SYSERR(gettimeofday(&tv_start, NULL));
 
 				SYSERR(flock(STDOUT_FILENO, LOCK_EX));
-				printf("%ld.%06ld;%ld.%06ld;\"%s\";\"pm10\";%f\n", tv_start.tv_sec, tv_start.tv_usec, tv_start.tv_sec, tv_start.tv_usec, argv[2], sensor.PM10());
-				printf("%ld.%06ld;%ld.%06ld;\"%s\";\"pm25\";%f\n", tv_start.tv_sec, tv_start.tv_usec, tv_start.tv_sec, tv_start.tv_usec, argv[2], sensor.PM25());
+				printf("%ld.%06ld;%ld.%06ld;\"%s\";\"SDS011\";\"PM10\";%f\n", tv_start.tv_sec, tv_start.tv_usec, tv_start.tv_sec, tv_start.tv_usec, argv[2], sensor.PM10());
+				printf("%ld.%06ld;%ld.%06ld;\"%s\";\"SDS011\";\"PM25\";%f\n", tv_start.tv_sec, tv_start.tv_usec, tv_start.tv_sec, tv_start.tv_usec, argv[2], sensor.PM25());
 				fflush(stdout);
 				SYSERR(flock(STDOUT_FILENO, LOCK_UN));
 			}
