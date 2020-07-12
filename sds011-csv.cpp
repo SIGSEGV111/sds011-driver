@@ -41,12 +41,12 @@ int main(int argc, char* argv[])
 				sensor.Refresh(11 * 60 * 1000);
 
 				// get timestamp
-				timeval tv_start;
-				SYSERR(gettimeofday(&tv_start, NULL));
+				timeval ts;
+				SYSERR(gettimeofday(&ts, NULL));
 
 				SYSERR(flock(STDOUT_FILENO, LOCK_EX));
-				printf("%ld.%06ld;%ld.%06ld;\"%s\";\"SDS011\";\"PM10\";%f\n", tv_start.tv_sec, tv_start.tv_usec, tv_start.tv_sec, tv_start.tv_usec, argv[2], sensor.PM10());
-				printf("%ld.%06ld;%ld.%06ld;\"%s\";\"SDS011\";\"PM25\";%f\n", tv_start.tv_sec, tv_start.tv_usec, tv_start.tv_sec, tv_start.tv_usec, argv[2], sensor.PM25());
+				printf("%ld.%06ld;\"%s\";\"SDS011\";\"PM10\";%f\n", ts.tv_sec, ts.tv_usec, argv[2], sensor.PM10());
+				printf("%ld.%06ld;\"%s\";\"SDS011\";\"PM25\";%f\n", ts.tv_sec, ts.tv_usec, argv[2], sensor.PM25());
 				fflush(stdout);
 				SYSERR(flock(STDOUT_FILENO, LOCK_UN));
 			}
