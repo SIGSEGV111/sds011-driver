@@ -20,6 +20,8 @@ int main(int argc, char* argv[])
 	signal(SIGHUP,  &OnSignal);
 	signal(SIGQUIT, &OnSignal);
 
+	close(STDIN_FILENO);
+
 	if(argc != 3)
 	{
 		fprintf(stderr, "usage: %s <tty-device> <location>\n", argv[0]);
