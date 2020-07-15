@@ -30,15 +30,15 @@ int main(int argc, char* argv[])
 	{
 		TSDS011 sensor(argv[1]);
 
-		// take a sample every 10min, sensor will be powered down for most of the time in between
-		sensor.SetSampleInterval(10);
+		// take a sample every 5min, sensor will be powered down for most of the time in between
+		sensor.SetSampleInterval(5);
 
 		while(do_run)
 		{
 			try
 			{
-				// take one sample
-				sensor.Refresh(11 * 60 * 1000);
+				// take one sample (wait up to 6min for data)
+				sensor.Refresh(6 * 60 * 1000);
 
 				// get timestamp
 				timeval ts;
